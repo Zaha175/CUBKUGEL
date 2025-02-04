@@ -63,8 +63,8 @@
 
           // Perspektivische Projektion – **Skalierungsfaktor erhöhen** (hier 250 statt 150)
           const ooz = 1 / (K1 + z2);
-          let xp = Math.floor(canvas.width / 2 + x1 * ooz * 500);
-          let yp = Math.floor(canvas.height / 2 - y1 * ooz * 500);
+          let xp = Math.floor(canvas.width / 2 + x1 * ooz * 350);
+          let yp = Math.floor(canvas.height / 2 - y1 * ooz * 350);
 
           // Normalenvektor (für eine Kugel)
           let nx = Math.sin(phi) * Math.cos(theta);
