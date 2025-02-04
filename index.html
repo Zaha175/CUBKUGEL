@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rotierende ASCII-Kugel im Westworld-Stil</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Parameter der Kugel
+    const R = 100;           // Kugelradius
+    const K1 = 300;          // Abstand des Betrachters
+    const thetaSpacing = 0.3;
+    const phiSpacing = 0.1;
+
+    // Rotationswinkel
+    let A = 0, B = 0;
+
+    // Lichtquelle (fester Vektor)
+    const light = { x: 0, y: 1, z: -1 };
+    const lightMag = Math.sqrt(light.x * light.x + light.y * light.y + light.z * light.z);
+    light.x /= lightMag; light.y /= lightMag; light.z /= lightMag;
+
+    // ASCII-Ziffern (0 bis 9)
+    const digits = "0123456789";
+
+    function render() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let phi = 0; phi < Math.PI; phi += phiSpacing) {
+        for (let theta = 0; theta < 2 * Math.PI; theta += thetaSpacing) {
+          let x = R * Math.sin(phi) * Math.cos(theta);
+          let y = R * Math.sin(phi) * Math.sin(theta);
+          let z = R * Math.cos(phi);
+
+          // Rotation um die Y-Achse (Winkel A)
+          let cosA = Math.cos(A), sinA = Math.sin(A);
+          let x1 = x * cosA + z * sinA;
+          let z1 = -x * sinA + z * cosA;
+
+          // Rotation um die X-Achse (Winkel B)
+          let cosB = Math.cos(B), sinB = Math.sin(B);
+          let y1 = y * cosB - z1 * sinB;
+          let z2 = y * sinB + z1 * cosB;
+
+          // Perspektivische Projektion – **Skalierungsfaktor erhöhen** (hier 250 statt 150)
+          const ooz = 1 / (K1 + z2);
+          let xp = Math.floor(canvas.width / 2 + x1 * ooz * 500);
+          let yp = Math.floor(canvas.height / 2 - y1 * ooz * 500);
+
+          // Normalenvektor (für eine Kugel)
+          let nx = Math.sin(phi) * Math.cos(theta);
+          let ny = Math.sin(phi) * Math.sin(theta);
+          let nz = Math.cos(phi);
+
+          // Berechne die Helligkeit via Skalarprodukt
+          let luminance = nx * light.x + ny * light.y + nz * light.z;
+          luminance = Math.max(0, luminance);
+
+          // Statt Graustufen: Interpolation zwischen dunkelorange und hellorange
+          const darkOrange = { r: 100, g: 50, b: 0 };
+          const lightOrange = { r: 255, g: 140, b: 0 };
+          let r = Math.floor(darkOrange.r + luminance * (lightOrange.r - darkOrange.r));
+          let g = Math.floor(darkOrange.g + luminance * (lightOrange.g - darkOrange.g));
+          let b = Math.floor(darkOrange.b + luminance * (lightOrange.b - darkOrange.b));
+          let color = `rgb(${r},${g},${b})`;
+
+          // Wähle ASCII-Ziffer basierend auf Helligkeit
+          let charIndex = Math.floor(luminance * (digits.length - 1));
+          let char = digits.charAt(charIndex);
+
+          // **Schriftgröße erhöhen** – hier 30px statt 20px
+          ctx.font = "30px 'Courier New', monospace";
+          ctx.fillStyle = color;
+          ctx.fillText(char, xp, yp);
+        }
+      }
+      A += 0.03;
+      B += 0.02;
+      requestAnimationFrame(render);
+    }
+
+    render();
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
